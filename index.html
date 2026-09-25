@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Product Sold Tracker</title>
+<style>
+:root{
+  --bg:#1a1a2e;--surface:#16213e;--card:#0f3460;--accent:#e94560;--accent2:#f5a623;
+  --text:#eaeaea;--muted:#8892a4;--border:#2a3a5c;--green:#4ade80;
+  --row-even:rgba(255,255,255,.03);
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ }}
+:root[data-theme="light"]{
+  --bg:#f7f7fb;--surface:#ffffff;--card:#eef0f6;--accent:#c0392b;--accent2:#2d6a4f;
+  --text:#212529;--muted:#6c757d;--border:#dfe3ea;--green:#198754;
+  --row-even:rgba(0,0,0,.02);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100%;font-size:14px;}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.topbar h1{font-size:1rem;color:var(--accent);}
+.topbar .sub{font-size:.7rem;color:var(--muted);}
+.btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:.72rem;font-weight:600;color:var(--text);cursor:pointer;white-space:nowrap;}
+.btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn.save-ok{color:var(--green);}
+.wrap{padding:10px;}
+.note{font-size:.68rem;color:var(--muted);line-height:1.5;margin-bottom:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;}
+.scroll{overflow-x:auto;border:1px solid var(--border);border-radius:8px;}
+table{border-collapse:collapse;width:100%;min-width:1300px;font-size:.68rem;}
+th,td{border:1px solid var(--border);padding:3px 4px;text-align:center;white-space:nowrap;}
+thead th{background:var(--card);position:sticky;top:0;z-index:5;font-size:.62rem;}
+.name-col{position:sticky;left:0;z-index:4;background:var(--surface);text-align:left!important;min-width:220px;max-width:220px;white-space:normal;padding:4px 8px!important;}
+thead .name-col{z-index:6;background:var(--card);}
+.name-code{color:var(--muted);font-size:.62rem;}
+.name-bundle{color:var(--accent2);font-size:.6rem;display:block;margin-top:2px;}
+tr:nth-child(even) td{background:var(--row-even);}
+.sec-row td{background:var(--card)!important;color:var(--accent2);font-weight:700;font-size:.78rem;text-align:left!important;padding:6px 8px!important;position:static;}
+.grp-row td{background:transparent!important;color:var(--accent);font-weight:700;font-size:.68rem;text-align:left!important;padding:5px 8px!important;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--border);position:static;}
+input.qty{width:38px;padding:3px 1px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);text-align:center;font-size:.68rem;}
+input.qty:focus{outline:none;border-color:var(--accent);}
+.tot-cell{font-weight:700;background:var(--col-total,rgba(245,166,35,.12))!important;color:var(--accent2);min-width:40px;}
+.summary{margin-top:18px;}
+.summary h2{font-size:.85rem;color:var(--accent);margin-bottom:6px;}
+table.sum-table{min-width:0;width:100%;font-size:.7rem;}
+table.sum-table th{position:static;}
+.sum-table td.name-col{position:static;min-width:0;max-width:none;}
+.adq-cell{color:var(--green);font-weight:700;}
+footer{padding:16px 10px 30px;font-size:.65rem;color:var(--muted);text-align:center;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div>
+    <h1>Product Sold Tracker</h1>
+    <div class="sub" id="periodLabel"></div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <span class="sub" id="saveStatus"></span>
+    <button class="btn" onclick="toggleTheme()">☀️/🌙</button>
+    <button class="btn" onclick="clearAll()">Clear All</button>
+  </div>
+</div>
+<div class="wrap">
+  <div class="note">Pre-filled with actual qty sold from your uploaded <b>Product Sales Report, 12/19/2025–01/03/2026</b> (Red Ribbon Waltermart Plaridel). Edit any cell to correct it — everything recalculates and saves to this browser automatically. Row <b>Total</b> = sum across the 16 days. Items under <b>Bundles / Multi-Packs</b> don't carry their own inventory code — selling one automatically credits the component codes listed under each bundle name. The <b>Code Summary</b> below aggregates direct sales + bundle credits by code, then computes ADQ (Qty ÷ 16), MIN (ADQ × 1.2) and MAX (ADQ × 1.5).
+  <br><b>Notes on the import:</b> (1) "Chocolate Hazelnut Bliss" / "(New)" share code CHBC REG, and "Mocha Marble Cake Slice" / "Mocha Mamon" were both given code MMCS — aggregated together in the summary, as your list specified. (2) "Tie-Up TCRL Half" sales were folded into Triple Chocolate Roll Half 2025. (3) Candles, cake toppers, greeting cards, food/handling charges, bottled water, and $0.00 "(MC)" lines (free/complimentary units) were excluded — not cake/pastry inventory. (4) "Assorted Mamon Pack 5S" and "Assorted Ensaimada 5S" appeared in the report but weren't in your original list — added at the bottom as <b>Unclassified</b> with their own qty tracked, but not yet auto-crediting any component codes since their exact contents weren't specified. Tell me their composition and I'll wire up the bundle credit like the others. Jan 1 shows 0 across the board — the report has no section for that date (store closed).</div>
+  <div class="scroll">
+    <table id="entryTable">
+      <thead><tr id="headRow"><th class="name-col">Product</th></tr></thead>
+      <tbody id="entryBody"></tbody>
+    </table>
+  </div>
+
+  <div class="summary">
+    <h2>Code Summary — Qty Sold / ADQ / MIN / MAX</h2>
+    <div class="scroll">
+      <table class="sum-table">
+        <thead><tr><th class="name-col">Product</th><th>Code</th><th>Qty Sold</th><th>ADQ</th><th>MIN</th><th>MAX</th></tr></thead>
+        <tbody id="sumBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<footer>16-day period · ADQ = Qty ÷ 16 · MIN = ADQ × 1.2 · MAX = ADQ × 1.5</footer>
+
+<script>
+const DATES=["Dec 19","Dec 20","Dec 21","Dec 22","Dec 23","Dec 24","Dec 25","Dec 26","Dec 27","Dec 28","Dec 29","Dec 30","Dec 31","Jan 1","Jan 2","Jan 3"];
+
+const CAKES={
+ "Rounds":[["Black Forest Regular Cake 2024","BF REG"],["Chocolate Bliss Regular","CBC REG"],["Chocolate Hazelnut Bliss","CHBC REG"],["Chocolate Hazelnut Bliss (New)","CHBC REG"],["CM Reg - Chocolate Mousse","CM REG"],["Mango Blossom Cake Regular","MBC REG"],["Mochaccino Delight Regular","MDLC REG"],["TMC Reg - Tiramisu Meltdown","TMC REG"],["UC Reg - Ube Bloom Cake 2018","UC REG"]],
+ "Junior":[["Black Forest Junior Cake 2024","BF JR"],["Chocolate Bliss Junior","CBC JR"]],
+ "Petite":[["Black Forest Petite","BF PT"],["Caramel Delight Petite","CDLC PT"],["Chocolate Bliss Petite","CBC PT"],["Mango Blossom Cake Petite","MBC PT"],["Mochaccino Delight Petite","MDLC PT"],["Ube Bloom Petite","UC PT"]],
+ "Rolls":[["Chocolate Roll Full","CRL F"],["Milky Caramel Roll Full","MCRL F"],["MOCRL Full - Mocha Roll","MOCRL F"],["MRL Full - Mango Roll 2017","MRL F"],["Triple Chocolate Roll Full 2025","TCRL F"],["UCRL Full - Ube and Cream Roll 2018","UCRL F"],["Chocolate Roll Half","CRL H"],["Milky Caramel Roll Half","MCRL H"],["Triple Chocolate Roll Half 2025","TCRL H"]],
+ "Dedication":[["Round Caramel Dedication Cake 8\"","CADC JR"],["Round Chocolate Dedication Cake 8\"","CDC JR"],["Round Holiday Chocolate Dedication Cake","HCDC JR"],["Round Mocha Dedication Cake","MDC JR"],["Round Vanilla Sprinkles Dedication Cake","VSDC JR"],["Supreme Caramel-Mocha Dedication Cake","CMDC JR"],["Holiday Chocolate Dedication Cake 8X12","HCDC REG"],["MDC8X12 - Mocha Dedication 2023","MDC REG"],["Caramel Dedication Cake 8X12","CADC REG"],["CDC 8X12 - Chocolate Dedication","CDC REG"],["CDC 12X12 - Chocolate Dedication 2022","CDC LARGE"]]
+};
+const PASTRIES=[["Chiffon Cake Slice 2024","CCS"],["Choco Cake Slice 2024","CHCS"],["Choco Peanut Butter Cake Slice 2025","CPBCS"],["Double Dutch Cake Slice 2024","DDCS"],["Mocha Marble Cake Slice 2024","MMCS"],["Moist Choco Slice (2014)","MCS"],["Red Velvet Cake Slice 2025","RVCS"],["Strawberry Cake Slice 2025","SCS"],["Ube Marble Cake Slice 2024","UMCS"],["Banana Crunch Loaf","BCR L"],["Banana Crunch (2014)","BCR SLC"],["Butter Mamon","BM"],["Butter Puto Luzon Pack 10S","BUPT"],["Cheesy Ensaimada - Luzon","ENS"],["Cheesy Mamon (2019)","CHM"],["Choco Bread Roll 4S","CHOCO BREAD ROLL 4'S"],["Choco Bread Rolls","CHOCO BREAD ROLL 8'S"],["Choco Crinkles (2014)","CRK"],["Fudgy Brownies Box of 6","FB"],["Macaroons (2014)","MCRN"],["Mocha Mamon (2014)","MMCS"],["Moist Chocolate Loaf","MCS LOAF"],["Peanut Polvoron 8S","PVN PE"],["Pinipig Polvoron 8S","PVN PN"],["Polvoron Assorted 15S","PVN 15"],["Polvoron Assorted 22S Box","PVN 22"],["Polvoron Classic 10S","PVN 10"],["Classic Polvoron 16S","PVN16"],["Taisan Loaf","TAI LF"],["Taisan Slice","TAI SLC"],["Ube Ensaimada","UBE ENS"],["Ube Mamon (2014)","UM"],["Raisin Bread Roll 4S","RBR 4'S"]];
+const BUNDLES=[
+ ["Assorted Cake Slice 5-PC Pack 2025",[["CHCS",1],["DDCS",1],["RVCS",1],["UMCS",1],["MMCS",1]]],
+ ["Assorted Cake Slice 8-PC Pack 2025",[["CHCS",1],["DDCS",1],["RVCS",1],["UMCS",1],["MMCS",1],["CCS",1],["CPBCS",1],["SCS",1]]],
+ ["Assorted PBD Pack 5S (2021)",[["ENS",2],["BM",2],["MCS",1]]],
+ ["Butter Mamon Pack 5S",[["BM",5]]],
+ ["Butter Mamon Pack 10S",[["BM",10]]],
+ ["Cheesy Ensaimada PBD Box 12S (2021)",[["ENS",12]]],
+ ["Ensaimada 4S Pack (2021)",[["ENS",4]]],
+ ["Ensaimada Pack 8S (2021)",[["ENS",8]]]
+];
+const NEW_UNCLASSIFIED=[
+ ["Assorted Mamon Pack 5S (NEW)",null],
+ ["Assorted Ensaimada 5S (NEW)",null]
+];
+
+const ITEMS=[];
+ITEMS.push({t:'sec',label:'🎂 Cakes'});
+["Rounds","Junior","Petite","Rolls","Dedication"].forEach(g=>{
+  ITEMS.push({t:'grp',label:g});
+  CAKES[g].forEach(([n,c])=>ITEMS.push({t:'item',n,c}));
+});
+ITEMS.push({t:'sec',label:'🥐 Pastries'});
+PASTRIES.forEach(([n,c])=>ITEMS.push({t:'item',n,c}));
+ITEMS.push({t:'grp',label:'Bundles / Multi-Packs (auto-credit)'});
+BUNDLES.forEach(([n,b])=>ITEMS.push({t:'item',n,b}));
+ITEMS.push({t:'grp',label:'Unclassified (seen in sales report, composition unconfirmed)'});
+NEW_UNCLASSIFIED.forEach(([n],i)=>ITEMS.push({t:'item',n,c:(i===0?'AMP 5S?':'AE 5S?')}));
+
+const DEFAULT_DATA=[[4,5,4,2,10,24,0,3,11,8,5,14,47,0,6,6],
+[3,2,2,4,2,11,1,2,1,7,17,13,47,0,1,2],
+[2,2,1,1,2,22,0,1,0,2,0,5,7,0,0,0],
+[0,0,0,0,0,0,4,1,0,0,0,6,31,0,1,0],
+[3,4,2,0,4,15,0,1,2,0,4,3,18,0,0,2],
+[1,2,1,2,1,7,1,1,0,1,0,6,10,0,0,0],
+[2,1,0,1,2,6,0,2,6,0,0,2,16,0,0,2],
+[0,1,2,2,0,8,1,1,7,2,2,6,17,0,0,2],
+[0,2,2,1,1,16,1,3,1,2,2,3,32,0,2,4],
+[4,1,3,0,5,10,0,1,0,0,2,5,8,0,0,1],
+[3,7,5,12,6,17,0,2,1,1,0,17,16,0,3,2],
+[4,4,2,0,3,10,8,9,0,2,6,10,12,0,2,0],
+[2,0,0,0,4,4,1,2,0,1,2,5,5,0,1,0],
+[10,6,7,3,11,11,6,7,6,3,11,11,16,0,2,0],
+[1,2,4,0,3,3,0,2,0,2,4,6,5,0,1,0],
+[2,2,1,0,4,4,0,0,2,1,3,4,7,0,1,0],
+[5,4,3,1,6,6,3,11,0,3,4,9,12,0,2,0],
+[4,5,3,5,6,24,25,0,4,9,7,6,84,0,8,5],
+[0,2,3,0,3,17,0,2,0,1,2,5,25,0,2,2],
+[1,1,1,0,3,1,0,0,0,0,0,0,0,0,0,0],
+[1,1,0,0,2,1,0,0,0,0,0,0,0,0,0,0],
+[7,3,4,8,27,49,11,5,4,8,5,16,56,0,11,10],
+[2,1,1,0,1,1,0,0,0,0,0,0,0,0,0,1],
+[2,1,18,1,3,10,4,2,4,0,4,9,10,0,2,2],
+[1,0,0,2,6,9,1,0,0,1,0,4,5,0,0,6],
+[9,1,2,0,4,17,0,1,6,2,4,7,10,0,2,5],
+[1,3,3,3,5,7,8,11,1,2,2,8,29,0,3,0],
+[5,12,7,9,11,35,7,5,11,15,19,32,79,0,7,22],
+[2,1,1,1,13,19,26,1,11,0,0,0,0,0,0,0],
+[3,6,4,3,6,21,2,0,1,8,1,19,27,0,3,2],
+[0,1,1,0,1,3,2,0,1,1,0,2,10,0,0,0],
+[1,4,7,1,8,9,5,5,1,2,2,10,30,0,3,0],
+[1,1,1,2,7,19,2,4,4,0,0,0,0,0,0,0],
+[1,2,3,1,2,6,1,1,0,3,1,5,18,0,0,0],
+[3,2,2,1,4,5,3,4,1,1,1,3,17,0,1,0],
+[6,9,10,8,0,10,0,1,1,6,7,14,33,0,1,0],
+[2,1,1,0,2,0,0,1,0,0,1,3,2,0,0,0],
+[5,6,1,8,2,5,0,0,2,6,2,2,2,0,4,3],
+[5,8,9,5,1,1,3,5,2,9,5,4,0,0,8,0],
+[5,2,0,11,5,0,2,1,1,4,3,4,0,0,4,3],
+[5,7,5,2,2,0,3,2,2,3,3,12,0,0,5,8],
+[5,2,2,4,1,2,2,2,4,5,9,4,0,0,5,5],
+[10,7,7,6,4,25,3,8,7,19,15,7,0,0,11,8],
+[4,7,5,4,2,1,2,6,0,3,3,6,8,0,5,4],
+[4,8,2,8,3,3,0,1,1,8,2,2,0,0,4,3],
+[9,6,3,5,2,0,3,2,2,7,1,11,0,0,5,6],
+[3,2,2,2,1,0,0,2,2,1,4,1,0,0,2,2],
+[5,5,6,7,0,0,0,5,5,3,11,2,0,0,5,5],
+[18,7,15,19,14,4,2,11,9,12,11,26,8,0,11,5],
+[0,0,0,0,0,5,0,0,0,0,0,3,5,0,0,0],
+[18,18,18,19,7,1,13,6,6,11,24,16,0,0,8,8],
+[2,1,3,6,5,0,1,4,1,1,6,2,0,0,2,0],
+[2,0,4,2,0,0,0,2,2,2,0,2,3,0,1,0],
+[2,1,3,2,0,0,0,1,2,3,3,0,0,0,1,1],
+[4,5,0,2,2,2,0,2,4,2,2,7,0,0,0,5],
+[0,9,4,10,3,10,0,3,1,1,6,3,7,0,2,3],
+[0,2,2,1,0,2,0,0,3,0,4,0,0,0,2,3],
+[1,3,0,0,3,5,3,2,2,0,2,2,3,0,4,2],
+[3,0,2,2,1,2,0,2,2,2,3,1,0,0,2,2],
+[0,1,2,0,2,0,0,0,0,0,0,1,1,0,0,2],
+[3,1,0,1,2,0,0,0,0,3,3,1,0,0,0,0],
+[0,0,1,0,3,3,3,0,0,0,2,0,4,0,0,1],
+[1,0,0,0,2,2,1,0,0,2,0,1,3,0,0,0],
+[0,1,0,0,7,0,0,0,0,0,1,2,4,0,0,1],
+[0,0,1,3,1,0,0,0,0,1,0,2,4,0,0,1],
+[1,3,3,2,3,2,0,1,3,0,1,4,2,0,2,0],
+[4,7,2,1,4,13,6,0,6,2,8,1,10,0,7,7],
+[3,4,2,2,0,0,0,2,0,3,4,0,0,0,0,2],
+[1,2,2,1,6,0,1,3,1,2,0,8,0,0,1,2],
+[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
+[9,7,9,8,6,13,2,5,6,3,8,5,3,0,5,1],
+[1,1,0,5,0,3,0,5,2,0,3,2,0,0,2,0],
+[5,6,12,9,13,10,0,7,3,5,6,5,8,0,3,8],
+[12,8,15,18,21,23,2,9,10,12,18,13,8,0,11,11],
+[6,6,8,5,13,17,2,3,5,7,6,9,8,0,4,5],
+[0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0],
+[10,14,12,10,18,29,13,10,11,13,12,17,27,0,11,17],
+[8,13,10,12,11,22,9,5,8,9,6,6,18,0,9,6],
+[2,2,3,0,0,8,6,0,3,1,5,3,5,0,2,7],
+[0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0]];
+let STATE=ITEMS.filter(i=>i.t==='item').map((i,idx)=>({n:i.n,c:i.c,b:i.b,days:(DEFAULT_DATA[idx]?DEFAULT_DATA[idx].slice():Array(16).fill(0))}));
+
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem('ps16_v1');
+    if(!raw)return;
+    const saved=JSON.parse(raw);
+    saved.forEach((days,i)=>{ if(STATE[i]&&Array.isArray(days)) STATE[i].days=days.map(v=>Number(v)||0); });
+  }catch(e){}
+}
+function save(){
+  try{
+    localStorage.setItem('ps16_v1',JSON.stringify(STATE.map(s=>s.days)));
+    const el=document.getElementById('saveStatus');
+    el.textContent='✓ saved';
+    el.className='sub save-ok';
+    clearTimeout(window._st);
+    window._st=setTimeout(()=>{el.textContent='';},1200);
+  }catch(e){}
+}
+function clearAll(){
+  if(!confirm('Clear all entered quantities? This cannot be undone.'))return;
+  STATE.forEach(s=>s.days=Array(16).fill(0));
+  try{localStorage.removeItem('ps16_v1');}catch(e){}
+  renderEntry();
+  renderSummary();
+}
+
+function renderEntry(){
+  const head=document.getElementById('headRow');
+  head.innerHTML='<th class="name-col">Product</th>'+DATES.map(d=>`<th>${d}</th>`).join('')+'<th>Total</th>';
+  let html='';
+  let si=0;
+  ITEMS.forEach(it=>{
+    if(it.t==='sec'){ html+=`<tr class="sec-row"><td colspan="${DATES.length+2}">${it.label}</td></tr>`; return; }
+    if(it.t==='grp'){ html+=`<tr class="grp-row"><td colspan="${DATES.length+2}">${it.label}</td></tr>`; return; }
+    const st=STATE[si];
+    const total=st.days.reduce((a,b)=>a+(b||0),0);
+    const codeLine=st.b?`<span class="name-bundle">→ ${st.b.map(([c,q])=>`${q}× ${c}`).join(', ')}</span>`:`<span class="name-code">${st.c}</span>`;
+    html+=`<tr><td class="name-col">${it.n}<br>${codeLine}</td>`;
+    for(let d=0;d<DATES.length;d++){
+      html+=`<td><input class="qty" type="number" min="0" inputmode="numeric" data-r="${si}" data-d="${d}" value="${st.days[d]||''}"></td>`;
+    }
+    html+=`<td class="tot-cell" id="tot-${si}">${total||0}</td></tr>`;
+    si++;
+  });
+  document.getElementById('entryBody').innerHTML=html;
+}
+
+function renderSummary(){
+  const codeQty={}, codeName={};
+  STATE.forEach(s=>{
+    const sum=s.days.reduce((a,b)=>a+(b||0),0);
+    if(s.b){
+      s.b.forEach(([code,mult])=>{
+        codeQty[code]=(codeQty[code]||0)+sum*mult;
+        if(!codeName[code])codeName[code]=code;
+      });
+    } else {
+      codeQty[s.c]=(codeQty[s.c]||0)+sum;
+      if(!codeName[s.c])codeName[s.c]=s.n;
+    }
+  });
+  const codes=Object.keys(codeQty).sort((a,b)=>a.localeCompare(b));
+  let html='';
+  codes.forEach(code=>{
+    const qty=codeQty[code];
+    const adq=qty/16, min=adq*1.2, max=adq*1.5;
+    html+=`<tr><td class="name-col">${codeName[code]}</td><td class="name-code">${code}</td><td>${qty}</td><td class="adq-cell">${adq.toFixed(2)}</td><td>${min.toFixed(2)}</td><td>${max.toFixed(2)}</td></tr>`;
+  });
+  document.getElementById('sumBody').innerHTML=html||'<tr><td colspan="6" style="color:var(--muted)">No quantities entered yet</td></tr>';
+}
+
+document.getElementById('entryBody').addEventListener?.('input',()=>{});
+document.addEventListener('input',e=>{
+  if(e.target.matches('input.qty')){
+    const r=+e.target.dataset.r, d=+e.target.dataset.d;
+    STATE[r].days[d]=parseFloat(e.target.value)||0;
+    document.getElementById('tot-'+r).textContent=STATE[r].days.reduce((a,b)=>a+(b||0),0);
+    save();
+    renderSummary();
+  }
+});
+
+function toggleTheme(){
+  const root=document.documentElement;
+  const cur=root.getAttribute('data-theme');
+  root.setAttribute('data-theme',cur==='light'?'dark':'light');
+  try{localStorage.setItem('ps16_theme',root.getAttribute('data-theme'));}catch(e){}
+}
+try{
+  const t=localStorage.getItem('ps16_theme');
+  if(t)document.documentElement.setAttribute('data-theme',t);
+}catch(e){}
+
+document.getElementById('periodLabel').textContent='16-day period: Dec 19 – Jan 3';
+loadSaved();
+renderEntry();
+renderSummary();
+</script>
+</body>
+</html>
